@@ -1,0 +1,315 @@
+:root {
+  --font-heading: 'Mountains of Christmas', cursive;
+  --font-body: 'Poppins', sans-serif;
+  --color-gold: #ffd700;
+  --color-red: #d42426;
+  --color-dark: #0f172a;
+  --color-snow: #ffffff;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-body);
+  background-color: var(--color-dark);
+  color: var(--color-snow);
+  overflow: hidden;
+  /* For snow containment */
+  height: 100vh;
+  width: 100vw;
+}
+
+#root {
+  height: 100%;
+  width: 100%;
+  position: relative;
+}
+
+/* Background Scene */
+.scene-container {
+  width: 100%;
+  height: 100%;
+  background-image: url('/assets/tree_bg.png');
+  background-size: cover;
+  background-position: center bottom;
+  background-repeat: no-repeat;
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
+}
+
+/* Snow Animation */
+.snowflake {
+  position: absolute;
+  color: #fff;
+  font-size: 1em;
+  font-family: Arial, sans-serif;
+  text-shadow: 0 0 5px #000;
+  top: -10%;
+  z-index: 2;
+  user-select: none;
+  pointer-events: none;
+  animation-name: fall, shake-it;
+  animation-duration: 10s, 3s;
+  animation-timing-function: linear, ease-in-out;
+  animation-iteration-count: infinite, infinite;
+  animation-play-state: running, running;
+}
+
+@keyframes fall {
+  0% {
+    top: -10%;
+  }
+
+  100% {
+    top: 100%;
+  }
+}
+
+@keyframes shake-it {
+  0% {
+    transform: translateX(0px);
+  }
+
+  50% {
+    transform: translateX(20px);
+  }
+
+  100% {
+    transform: translateX(0px);
+  }
+}
+
+/* Santa Animation */
+.santa-container {
+  position: absolute;
+  top: 10%;
+  right: -200px;
+  animation: fly-across 20s linear infinite;
+  z-index: 2;
+  opacity: 0.8;
+}
+
+@keyframes fly-across {
+  0% {
+    right: -200px;
+    transform: scale(0.5);
+  }
+
+  100% {
+    right: 120%;
+    transform: scale(0.5);
+  }
+
+  /* Move across screen */
+}
+
+/* Interactive Gift Area */
+.gift-area {
+  position: absolute;
+  bottom: 5%;
+  /* Adjust based on tree position in image */
+  left: 0;
+  width: 100%;
+  height: 150px;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  gap: 2rem;
+  z-index: 10;
+  padding-bottom: 20px;
+}
+
+.gift-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+}
+
+.gift-button:hover {
+  transform: scale(1.1) translateY(-10px);
+}
+
+.gift-button img {
+  width: 80px;
+  height: auto;
+  filter: drop-shadow(0 10px 15px rgba(0, 0, 0, 0.5)) brightness(0.9);
+}
+
+.gift-button:hover img {
+  filter: brightness(1.2);
+}
+
+.click-me-hint {
+  font-family: var(--font-heading);
+  color: var(--color-gold);
+  font-size: 1.2rem;
+  margin-top: 5px;
+  opacity: 0;
+  transition: opacity 0.3s;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+}
+
+.gift-button:hover .click-me-hint {
+  opacity: 1;
+}
+
+/* Modal Overlay */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.85);
+  /* Darker backdrop */
+  backdrop-filter: blur(8px);
+  z-index: 100;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  animation: fadeIn 0.5s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+.modal-content {
+  text-align: center;
+  color: white;
+  max-width: 90%;
+  width: 400px;
+  position: relative;
+}
+
+.zoomed-gift {
+  width: 250px;
+  height: auto;
+  cursor: pointer;
+  animation: float 3s ease-in-out infinite, pulse-glow 2s infinite;
+  transition: transform 0.5s;
+}
+
+.zoomed-gift:active {
+  transform: scale(0.95);
+}
+
+@keyframes float {
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
+@keyframes pulse-glow {
+  0% {
+    filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.5));
+  }
+
+  50% {
+    filter: drop-shadow(0 0 30px rgba(255, 215, 0, 0.8));
+  }
+
+  100% {
+    filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.5));
+  }
+}
+
+.instruction-text {
+  font-family: var(--font-heading);
+  font-size: 2rem;
+  margin-top: 2rem;
+  color: #fff;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+/* Prize Reveal */
+.prize-container {
+  background: white;
+  border-radius: 20px;
+  padding: 3rem 2rem;
+  color: var(--color-dark);
+  text-align: center;
+  position: relative;
+  animation: popIn 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  border: 5px solid var(--color-red);
+  box-shadow: 0 0 50px rgba(212, 36, 38, 0.6);
+}
+
+@keyframes popIn {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.congrats-text {
+  font-family: var(--font-heading);
+  font-size: 3rem;
+  color: var(--color-red);
+  margin-bottom: 1rem;
+}
+
+.prize-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.voucher-code {
+  background: var(--color-dark);
+  color: var(--color-gold);
+  padding: 1rem;
+  font-size: 1.8rem;
+  font-weight: bold;
+  border-radius: 10px;
+  margin: 1.5rem 0;
+  letter-spacing: 2px;
+  border: 2px dashed var(--color-gold);
+}
+
+.close-btn {
+  background: var(--color-red);
+  color: white;
+  border: none;
+  padding: 0.8rem 2rem;
+  border-radius: 50px;
+  font-size: 1.2rem;
+  cursor: pointer;
+  font-weight: bold;
+  transition: transform 0.2s;
+}
+
+.close-btn:hover {
+  transform: scale(1.05);
+  background: #b91c1e;
+}
+
+/* Confetti (Simple CSS implementation or just a placeholder for now) */
+/* We can add simple confetti particles if needed, but let's stick to the gift basics first */
