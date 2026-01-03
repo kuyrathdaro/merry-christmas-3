@@ -1,107 +1,100 @@
 import { useMemo } from 'react';
-import * as THREE from 'three';
 import BlinkingLight from './BlinkingLight';
 
 const TreeLights = () => {
-    const pseudo = (n: number) => Math.abs(Math.sin(n) * 10000) % 1;
-    const lights = useMemo(() => {
-        const items = [] as Array<{ pos: [number, number, number]; color: string; angle: number }>;
-        const colors = ['#ef4444', '#fbbf24', '#3b82f6'];
-        for (let i = 0; i < 40; i++) {
-            const h = pseudo(i + 7) * 3 + 1.5;
-            const progress = (h - 1.5) / 3.5;
-            const r = (1 - progress) * 2.0;
-            const angle = pseudo(i + 17) * Math.PI * 2;
-            const x = Math.cos(angle) * r;
-            const z = Math.sin(angle) * r;
-            const color = colors[Math.floor(pseudo(i + 23) * colors.length)];
-            items.push({ pos: [x, h, z], color, angle });
+    // Function to get tree radius at a given height
+    const getTreeRadius = (height: number): number => {
+        // Tree structure from ChristmasTree.tsx:
+        // TreeNode at y=1.5, scale=2.2 (radius=2.2, height=3.3, top at y=4.8)
+        // TreeNode at y=2.5, scale=1.8 (radius=1.8, height=2.7, top at y=5.2)
+        // TreeNode at y=3.5, scale=1.4 (radius=1.4, height=2.1, top at y=5.6)
+        // TreeNode at y=4.3, scale=1.0 (radius=1.0, height=1.5, top at y=5.8)
+
+        if (height <= 1.5) return 2.2; // Bottom section
+        if (height <= 2.5) {
+            // Interpolate in bottom cone (y=1.5 to 4.8)
+            const t = (height - 1.5) / (4.8 - 1.5);
+            return 2.2 * (1 - t);
         }
+        if (height <= 3.5) {
+            // Interpolate in second cone (y=2.5 to 5.2)
+            const t = (height - 2.5) / (5.2 - 2.5);
+            return 1.8 * (1 - t);
+        }
+        if (height <= 4.3) {
+            // Interpolate in third cone (y=3.5 to 5.6)
+            const t = (height - 3.5) / (5.6 - 3.5);
+            return 1.4 * (1 - t);
+        }
+        // Top cone (y=4.3 to 5.8)
+        const t = (height - 4.3) / (5.8 - 4.3);
+        return 1.0 * (1 - t);
+    };
+
+    const lights = useMemo(() => {
+        const items = [] as Array<{ pos: [number, number, number]; color: string; rotation: [number, number, number] }>;
+        // Rich, vibrant Christmas light colors
+        const colors = [
+            '#ff1744', // bright red
+            '#ff6f00', // vivid orange
+            '#ffd600', // golden yellow
+            '#00e676', // bright green
+            '#00e5ff', // cyan
+            '#2979ff', // vivid blue
+            '#d500f9', // purple
+            '#ff4081', // pink
+        ];
+
+        // Create lights in a beautiful spiral pattern around the tree
+        const spirals = 5;
+        const lightsPerSpiral = 8;
+
+        for (let spiral = 0; spiral < spirals; spiral++) {
+            const spiralOffset = (spiral / spirals) * Math.PI * 2;
+
+            for (let i = 0; i < lightsPerSpiral; i++) {
+                const progress = i / (lightsPerSpiral - 1);
+                const h = 1.8 + progress * 3.5; // height from 1.8 to 5.3
+
+                // Get actual tree radius at this height and push INTO the tree
+                const treeRadius = getTreeRadius(h);
+                const r = treeRadius * 1.05; // 105% to push into tree surface
+
+                // Spiral angle - rotates as we go up
+                const angle = spiralOffset + progress * Math.PI * 5;
+
+                const x = Math.cos(angle) * r;
+                const z = Math.sin(angle) * r;
+
+                // Calculate rotation to point downward and slightly outward
+                const tiltOutward = Math.atan2(x, z);
+                const hangAngle = Math.PI; // point downward
+
+                // Alternate colors in a pleasing pattern
+                const colorIndex = (spiral * 3 + i) % colors.length;
+                const color = colors[colorIndex];
+
+                items.push({
+                    pos: [x, h, z],
+                    color,
+                    rotation: [hangAngle, tiltOutward, 0]
+                });
+            }
+        }
+
         return items;
     }, []);
 
-    // sort lights by angle so they map consistently to cable rings
-    const ordered = useMemo(() => [...lights].sort((a, b) => a.angle - b.angle), [lights]);
-
-    // define cable rings (heights and radii). Higher rings are smaller radius.
-    const rings = useMemo(() => {
-        const heights = [1.8, 2.6, 3.4, 4.2];
-        const radii = [2.0, 1.7, 1.3, 0.9];
-        return heights.map((h, i) => ({ height: h, radius: radii[i] }));
-    }, []);
-
-    // tube geometries for each ring with slight sag for realism
-    const ringGeometries = useMemo(() => {
-        return rings.map((r, ri) => {
-            const segs = 256;
-            const pts: THREE.Vector3[] = [];
-            // sag amplitude scales with radius
-            const sagAmp = 0.06 * (r.radius / 2);
-            for (let i = 0; i <= segs; i++) {
-                const a = (i / segs) * Math.PI * 2;
-                // gentle sag using absolute sin to create symmetric droops
-                const sag = Math.abs(Math.sin(a)) * sagAmp;
-                const y = r.height - sag;
-                pts.push(new THREE.Vector3(Math.cos(a) * r.radius, y, Math.sin(a) * r.radius));
-            }
-            const curve = new THREE.CatmullRomCurve3(pts, true);
-            const geo = new THREE.TubeGeometry(curve, pts.length * 2, 0.02, 10, true);
-            return { geo, curve };
-        });
-    }, [rings]);
-
     return (
         <group>
-            {/* cable rings */}
-            {ringGeometries.map((rg, i) => (
-                <mesh key={i} geometry={rg.geo} castShadow>
-                    <meshStandardMaterial color="#0d3b26" metalness={0.05} roughness={0.75} clearcoat={0.1} />
-                </mesh>
+            {lights.map((light, i) => (
+                <BlinkingLight
+                    key={i}
+                    position={light.pos}
+                    color={light.color}
+                    rotation={light.rotation}
+                />
             ))}
-
-            {/* bulbs hang from nearest ring based on their height; connector rendered in world-space */}
-            {ordered.map((l, i) => {
-                const angle = Math.atan2(l.pos[2], l.pos[0]);
-                // pick ring index closest to bulb's y
-                let bestIdx = 0;
-                let bestDiff = Infinity;
-                for (let ri = 0; ri < rings.length; ri++) {
-                    const d = Math.abs(rings[ri].height - l.pos[1]);
-                    if (d < bestDiff) { bestDiff = d; bestIdx = ri; }
-                }
-                const ring = rings[bestIdx];
-                const attachPoint = new THREE.Vector3(Math.cos(angle) * ring.radius, ring.height, Math.sin(angle) * ring.radius);
-                const bulbPos = new THREE.Vector3(l.pos[0], l.pos[1], l.pos[2]);
-                const dir = new THREE.Vector3().subVectors(bulbPos, attachPoint);
-                const len = dir.length();
-                const mid = attachPoint.clone().add(dir.clone().multiplyScalar(0.5));
-                const quat = new THREE.Quaternion();
-                if (len > 0.0001) quat.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir.clone().normalize());
-
-                return (
-                    <group key={i}>
-                        {/* small hook at attach point */}
-                        <mesh position={[attachPoint.x, attachPoint.y, attachPoint.z]}>
-                            <sphereGeometry args={[0.03, 8, 8]} />
-                            <meshStandardMaterial color="#2b2b2b" metalness={0.8} roughness={0.25} />
-                        </mesh>
-
-                        {/* connector */}
-                        {len > 0.0001 && (
-                            <mesh position={[mid.x, mid.y, mid.z]} quaternion={quat}>
-                                <cylinderGeometry args={[0.0125, 0.0125, len, 6]} />
-                                <meshStandardMaterial color="#072612" metalness={0.1} roughness={0.6} />
-                            </mesh>
-                        )}
-
-                        {/* bulb */}
-                        <BlinkingLight
-                            position={[bulbPos.x, bulbPos.y, bulbPos.z]}
-                            color={l.color}
-                        />
-                    </group>
-                );
-            })}
         </group>
     );
 };
