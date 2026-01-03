@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type JSX } from 'react'
 
 export function LoadingScreen(): JSX.Element | null {
     const [progress, setProgress] = useState(0)
