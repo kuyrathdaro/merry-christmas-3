@@ -30,18 +30,18 @@ const BlinkingLight = ({ position, color, rotation = [0, 0, 0] }: BlinkingLightP
 
             if (t < 0.15) {
                 // Narrow neck at base
-                x = 0.015 + t * 0.1;
-                y = -0.08 + t * 0.3;
+                x = (0.015 + t * 0.1) * 1.8;
+                y = (-0.08 + t * 0.3) * 1.8;
             } else if (t < 0.85) {
                 // Main bulb body - wider middle
                 const angle = (t - 0.15) * Math.PI;
-                x = 0.035 + Math.sin(angle) * 0.025;
-                y = -0.035 + (t - 0.15) * 0.18;
+                x = (0.035 + Math.sin(angle) * 0.025) * 1.8;
+                y = (-0.035 + (t - 0.15) * 0.18) * 1.8;
             } else {
                 // Tapered top
                 const tt = (t - 0.85) / 0.15;
-                x = 0.035 * (1 - tt * 0.7);
-                y = 0.09 + tt * 0.02;
+                x = (0.035 * (1 - tt * 0.7)) * 1.8;
+                y = (0.09 + tt * 0.02) * 1.8;
             }
 
             points.push(new THREE.Vector2(x, y));
@@ -118,8 +118,8 @@ const BlinkingLight = ({ position, color, rotation = [0, 0, 0] }: BlinkingLightP
             </mesh>
 
             {/* Small ceramic/metal base */}
-            <mesh position={[0, -0.09, 0]}>
-                <cylinderGeometry args={[0.022, 0.02, 0.02, 12]} />
+            <mesh position={[0, -0.162, 0]}>
+                <cylinderGeometry args={[0.0396, 0.036, 0.036, 12]} />
                 <meshStandardMaterial
                     color="#e8e8e8"
                     roughness={0.3}
@@ -128,8 +128,8 @@ const BlinkingLight = ({ position, color, rotation = [0, 0, 0] }: BlinkingLightP
             </mesh>
 
             {/* Metal screw threads */}
-            <mesh position={[0, -0.105, 0]}>
-                <cylinderGeometry args={[0.02, 0.018, 0.03, 12]} />
+            <mesh position={[0, -0.189, 0]}>
+                <cylinderGeometry args={[0.036, 0.0324, 0.054, 12]} />
                 <meshStandardMaterial
                     color="#c9b037"
                     metalness={0.9}
@@ -138,7 +138,7 @@ const BlinkingLight = ({ position, color, rotation = [0, 0, 0] }: BlinkingLightP
             </mesh>
 
             {/* Soft glow effect */}
-            <sprite ref={glowRef} position={[0, 0, 0]} scale={[0.3, 0.3, 1]}>
+            <sprite ref={glowRef} position={[0, 0, 0]} scale={[0.45, 0.45, 1]}>
                 <spriteMaterial
                     map={glowMap}
                     color={color}

@@ -8,6 +8,7 @@ interface GiftBoxProps {
     ribbonColor: string
     isOpen?: boolean
     onClick?: () => void
+    scale?: number
 }
 
 /* ===== Proportions tuned to reference ===== */
@@ -27,7 +28,8 @@ const GiftBox = ({
     color,
     ribbonColor,
     isOpen = false,
-    onClick
+    onClick,
+    scale = 1
 }: GiftBoxProps) => {
 
     const lidRef = useRef<THREE.Group>(null)
@@ -49,6 +51,7 @@ const GiftBox = ({
     return (
         <group
             position={position}
+            scale={scale}
             onClick={(e) => {
                 e.stopPropagation()
                 onClick?.()

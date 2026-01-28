@@ -47,9 +47,9 @@ const ChristmasScene = () => {
             <ChristmasTree />
             <Santa />
 
-            {/* Gifts */}
+            {/* Gifts - positioned just outside tree base (tree radius ~2.2 units) */}
             <GiftBox
-                position={[0, -2, 2.8]}
+                position={[0, -2, 3.0]}
                 color="#dc2626"
                 ribbonColor="#fbbf24"
                 onClick={() => handleBoxClick('main')}
@@ -57,10 +57,10 @@ const ChristmasScene = () => {
                 scale={1.2}
             />
 
-            <GiftBox position={[-2.2, -2, 1.5]} color="#1e40af" ribbonColor="#93c5fd" />
-            <GiftBox position={[2.2, -2, 1.5]} color="#065f46" ribbonColor="#6ee7b7" />
-            <GiftBox position={[-1.5, -2, -1]} color="#7c3aed" ribbonColor="#c4b5fd" />
-            <GiftBox position={[1.5, -2, -1]} color="#ea580c" ribbonColor="#fde047" />
+            <GiftBox position={[-2.5, -2, 1.8]} color="#1e40af" ribbonColor="#93c5fd" />
+            <GiftBox position={[2.5, -2, 1.8]} color="#065f46" ribbonColor="#6ee7b7" />
+            <GiftBox position={[-2.3, -2, -2.0]} color="#7c3aed" ribbonColor="#c4b5fd" />
+            <GiftBox position={[2.3, -2, -2.0]} color="#ea580c" ribbonColor="#fde047" />
 
             {/* Controls */}
             <OrbitControls
