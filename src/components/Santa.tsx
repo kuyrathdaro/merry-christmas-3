@@ -95,266 +95,288 @@ const Reindeer = ({ position, offset }: { position: Vec3, offset: number }) => {
 };
 
 const SantaSleigh = () => {
-    const headRef = useRef<THREE.Group>(null);
+    const groupRef = useRef<THREE.Group>(null);
 
-    // Subtle head movement only (no flying)
     useFrame(({ clock }) => {
-        if (headRef.current) {
-            headRef.current.rotation.y = Math.sin(clock.getElapsedTime() * 0.6) * 0.04;
+        if (groupRef.current) {
+            const t = clock.getElapsedTime() * 0.25; // Flight speed
+
+            // Organic wandering path (Sum of sines) - CLOSER TO TREE
+            // Range: X [-7, 7], Z [-7, 7], Y [2, 6]
+            const x = Math.sin(t) * 5 + Math.sin(t * 2.1) * 2;
+            const z = Math.cos(t * 1.2) * 5 + Math.cos(t * 2.4) * 2;
+            const y = 4 + Math.sin(t * 0.6) * 2;
+
+            // Calculate "next" point for lookAt to handle rotation
+            const tNext = t + 0.05;
+            const nextX = Math.sin(tNext) * 5 + Math.sin(tNext * 2.1) * 2;
+            const nextZ = Math.cos(tNext * 1.2) * 5 + Math.cos(tNext * 2.4) * 2;
+            const nextY = 4 + Math.sin(tNext * 0.6) * 2;
+
+            groupRef.current.position.set(x, y, z);
+            groupRef.current.lookAt(nextX, nextY, nextZ);
+
+            // Add slight banking (roll) based on turn
+            // We can approximate turn sharpness by the difference in direction
+            groupRef.current.position.set(x, y, z);
+            groupRef.current.lookAt(nextX, nextY, nextZ);
         }
     });
 
     return (
-        // Static position near the tree
-        <group position={[-5, -1.55, 3.5]} rotation={[0, 0.5, 0]}>
-            {/* ========== SLEIGH ========== */}
-            {/* Main sleigh body */}
-            <mesh position={[0, 0, 0]}>
-                <boxGeometry args={[1.6, 0.45, 0.9]} />
-                <meshStandardMaterial color="#8B0000" />
-            </mesh>
-
-            {/* Sleigh front curve */}
-            <mesh position={[0.7, 0.25, 0]} rotation={[0, 0, -0.3]}>
-                <boxGeometry args={[0.5, 0.35, 0.9]} />
-                <meshStandardMaterial color="#8B0000" />
-            </mesh>
-
-            {/* Sleigh back rest */}
-            <mesh position={[-0.7, 0.35, 0]}>
-                <boxGeometry args={[0.12, 0.5, 0.8]} />
-                <meshStandardMaterial color="#8B0000" />
-            </mesh>
-
-            {/* Gold trim */}
-            <mesh position={[0, 0.24, 0.47]}>
-                <boxGeometry args={[1.7, 0.06, 0.03]} />
-                <meshStandardMaterial color="#FFD700" metalness={0.8} roughness={0.3} />
-            </mesh>
-            <mesh position={[0, 0.24, -0.47]}>
-                <boxGeometry args={[1.7, 0.06, 0.03]} />
-                <meshStandardMaterial color="#FFD700" metalness={0.8} roughness={0.3} />
-            </mesh>
-
-            {/* Sleigh runners */}
-            <mesh position={[0, -0.35, 0.35]}>
-                <boxGeometry args={[2.0, 0.06, 0.08]} />
-                <meshStandardMaterial color="#C0C0C0" metalness={0.9} roughness={0.2} />
-            </mesh>
-            <mesh position={[0, -0.35, -0.35]}>
-                <boxGeometry args={[2.0, 0.06, 0.08]} />
-                <meshStandardMaterial color="#C0C0C0" metalness={0.9} roughness={0.2} />
-            </mesh>
-            {/* Runner curves */}
-            <mesh position={[1.0, -0.22, 0.35]} rotation={[0, 0, -0.7]}>
-                <boxGeometry args={[0.35, 0.06, 0.08]} />
-                <meshStandardMaterial color="#C0C0C0" metalness={0.9} roughness={0.2} />
-            </mesh>
-            <mesh position={[1.0, -0.22, -0.35]} rotation={[0, 0, -0.7]}>
-                <boxGeometry args={[0.35, 0.06, 0.08]} />
-                <meshStandardMaterial color="#C0C0C0" metalness={0.9} roughness={0.2} />
-            </mesh>
-
-            {/* Runner supports */}
-            <mesh position={[0.35, -0.17, 0.35]}>
-                <boxGeometry args={[0.06, 0.25, 0.06]} />
-                <meshStandardMaterial color="#8B0000" />
-            </mesh>
-            <mesh position={[-0.35, -0.17, 0.35]}>
-                <boxGeometry args={[0.06, 0.25, 0.06]} />
-                <meshStandardMaterial color="#8B0000" />
-            </mesh>
-            <mesh position={[0.35, -0.17, -0.35]}>
-                <boxGeometry args={[0.06, 0.25, 0.06]} />
-                <meshStandardMaterial color="#8B0000" />
-            </mesh>
-            <mesh position={[-0.35, -0.17, -0.35]}>
-                <boxGeometry args={[0.06, 0.25, 0.06]} />
-                <meshStandardMaterial color="#8B0000" />
-            </mesh>
-
-            {/* ========== SANTA - Facing FORWARD (same as reindeer) ========== */}
-            <group position={[-0.25, 0.55, 0]} rotation={[0, Math.PI / 2, 0]}>
-                {/* Body */}
-                <mesh>
-                    <sphereGeometry args={[0.35, 16, 16]} />
-                    <meshStandardMaterial color="#DC143C" />
+        // Dynamic position controlled by useFrame
+        <group ref={groupRef}>
+            {/* Rotate model -90 deg on Y because model faces +X but lookAt uses +Z */}
+            <group rotation={[0, -Math.PI / 2, 0]}>
+                {/* ========== SLEIGH ========== */}
+                {/* Main sleigh body */}
+                <mesh position={[0, 0, 0]}>
+                    <boxGeometry args={[1.6, 0.45, 0.9]} />
+                    <meshStandardMaterial color="#8B0000" />
                 </mesh>
 
-                {/* White fur trim */}
-                <mesh position={[0, -0.3, 0]}>
-                    <cylinderGeometry args={[0.33, 0.37, 0.1, 16]} />
-                    <meshStandardMaterial color="#FFFFFF" />
+                {/* Sleigh front curve */}
+                <mesh position={[0.7, 0.25, 0]} rotation={[0, 0, -0.3]}>
+                    <boxGeometry args={[0.5, 0.35, 0.9]} />
+                    <meshStandardMaterial color="#8B0000" />
                 </mesh>
 
-                {/* Belt */}
-                <mesh position={[0, -0.08, 0]}>
-                    <cylinderGeometry args={[0.37, 0.37, 0.08, 16]} />
-                    <meshStandardMaterial color="#1a1a1a" />
-                </mesh>
-                {/* Belt buckle - on front facing +Z (which becomes +X after rotation) */}
-                <mesh position={[0, -0.08, 0.38]}>
-                    <boxGeometry args={[0.1, 0.06, 0.02]} />
-                    <meshStandardMaterial color="#FFD700" metalness={0.9} roughness={0.2} />
+                {/* Sleigh back rest */}
+                <mesh position={[-0.7, 0.35, 0]}>
+                    <boxGeometry args={[0.12, 0.5, 0.8]} />
+                    <meshStandardMaterial color="#8B0000" />
                 </mesh>
 
-                {/* Head */}
-                <group position={[0, 0.38, 0]} ref={headRef}>
-                    {/* Face */}
+                {/* Gold trim */}
+                <mesh position={[0, 0.24, 0.47]}>
+                    <boxGeometry args={[1.7, 0.06, 0.03]} />
+                    <meshStandardMaterial color="#FFD700" metalness={0.8} roughness={0.3} />
+                </mesh>
+                <mesh position={[0, 0.24, -0.47]}>
+                    <boxGeometry args={[1.7, 0.06, 0.03]} />
+                    <meshStandardMaterial color="#FFD700" metalness={0.8} roughness={0.3} />
+                </mesh>
+
+                {/* Sleigh runners */}
+                <mesh position={[0, -0.35, 0.35]}>
+                    <boxGeometry args={[2.0, 0.06, 0.08]} />
+                    <meshStandardMaterial color="#C0C0C0" metalness={0.9} roughness={0.2} />
+                </mesh>
+                <mesh position={[0, -0.35, -0.35]}>
+                    <boxGeometry args={[2.0, 0.06, 0.08]} />
+                    <meshStandardMaterial color="#C0C0C0" metalness={0.9} roughness={0.2} />
+                </mesh>
+                {/* Runner curves */}
+                <mesh position={[1.0, -0.22, 0.35]} rotation={[0, 0, -0.7]}>
+                    <boxGeometry args={[0.35, 0.06, 0.08]} />
+                    <meshStandardMaterial color="#C0C0C0" metalness={0.9} roughness={0.2} />
+                </mesh>
+                <mesh position={[1.0, -0.22, -0.35]} rotation={[0, 0, -0.7]}>
+                    <boxGeometry args={[0.35, 0.06, 0.08]} />
+                    <meshStandardMaterial color="#C0C0C0" metalness={0.9} roughness={0.2} />
+                </mesh>
+
+                {/* Runner supports */}
+                <mesh position={[0.35, -0.17, 0.35]}>
+                    <boxGeometry args={[0.06, 0.25, 0.06]} />
+                    <meshStandardMaterial color="#8B0000" />
+                </mesh>
+                <mesh position={[-0.35, -0.17, 0.35]}>
+                    <boxGeometry args={[0.06, 0.25, 0.06]} />
+                    <meshStandardMaterial color="#8B0000" />
+                </mesh>
+                <mesh position={[0.35, -0.17, -0.35]}>
+                    <boxGeometry args={[0.06, 0.25, 0.06]} />
+                    <meshStandardMaterial color="#8B0000" />
+                </mesh>
+                <mesh position={[-0.35, -0.17, -0.35]}>
+                    <boxGeometry args={[0.06, 0.25, 0.06]} />
+                    <meshStandardMaterial color="#8B0000" />
+                </mesh>
+
+                {/* ========== SANTA - Facing FORWARD (same as reindeer) ========== */}
+                <group position={[-0.25, 0.55, 0]} rotation={[0, Math.PI / 2, 0]}>
+                    {/* Body */}
                     <mesh>
-                        <sphereGeometry args={[0.22, 20, 20]} />
-                        <meshStandardMaterial color="#FDBBB7" roughness={0.6} />
+                        <sphereGeometry args={[0.35, 16, 16]} />
+                        <meshStandardMaterial color="#DC143C" />
                     </mesh>
 
-                    {/* Eyes - on front (+Z, becomes +X after rotation) */}
-                    <mesh position={[-0.07, 0.04, 0.18]}>
-                        <sphereGeometry args={[0.03, 10, 10]} />
-                        <meshStandardMaterial color="#1a1a1a" />
-                    </mesh>
-                    <mesh position={[0.07, 0.04, 0.18]}>
-                        <sphereGeometry args={[0.03, 10, 10]} />
-                        <meshStandardMaterial color="#1a1a1a" />
-                    </mesh>
-
-                    {/* Rosy cheeks */}
-                    <mesh position={[-0.12, -0.01, 0.15]}>
-                        <sphereGeometry args={[0.04, 10, 10]} />
-                        <meshStandardMaterial color="#FF6B6B" />
-                    </mesh>
-                    <mesh position={[0.12, -0.01, 0.15]}>
-                        <sphereGeometry args={[0.04, 10, 10]} />
-                        <meshStandardMaterial color="#FF6B6B" />
-                    </mesh>
-
-                    {/* Red nose */}
-                    <mesh position={[0, -0.01, 0.21]}>
-                        <sphereGeometry args={[0.04, 12, 12]} />
-                        <meshStandardMaterial color="#FF0000" />
-                    </mesh>
-
-                    {/* White beard */}
-                    <group position={[0, -0.12, 0.12]}>
-                        <mesh position={[0, -0.04, 0.04]}>
-                            <sphereGeometry args={[0.15, 14, 14]} />
-                            <meshStandardMaterial color="#FFFFFF" />
-                        </mesh>
-                        <mesh position={[-0.1, 0, 0.02]}>
-                            <sphereGeometry args={[0.1, 12, 12]} />
-                            <meshStandardMaterial color="#FFFFFF" />
-                        </mesh>
-                        <mesh position={[0.1, 0, 0.02]}>
-                            <sphereGeometry args={[0.1, 12, 12]} />
-                            <meshStandardMaterial color="#FFFFFF" />
-                        </mesh>
-                        <mesh position={[0, -0.15, 0]}>
-                            <sphereGeometry args={[0.12, 12, 12]} />
-                            <meshStandardMaterial color="#FFFFFF" />
-                        </mesh>
-                        <mesh position={[0, -0.24, -0.02]}>
-                            <sphereGeometry args={[0.08, 10, 10]} />
-                            <meshStandardMaterial color="#FFFFFF" />
-                        </mesh>
-                    </group>
-
-                    {/* Mustache */}
-                    <mesh position={[-0.06, -0.05, 0.19]} rotation={[0, 0, 0.3]}>
-                        <capsuleGeometry args={[0.025, 0.06, 6, 8]} />
-                        <meshStandardMaterial color="#FFFFFF" />
-                    </mesh>
-                    <mesh position={[0.06, -0.05, 0.19]} rotation={[0, 0, -0.3]}>
-                        <capsuleGeometry args={[0.025, 0.06, 6, 8]} />
+                    {/* White fur trim */}
+                    <mesh position={[0, -0.3, 0]}>
+                        <cylinderGeometry args={[0.33, 0.37, 0.1, 16]} />
                         <meshStandardMaterial color="#FFFFFF" />
                     </mesh>
 
-                    {/* Santa Hat - positioned at top of head */}
-                    <group position={[0, 0.15, 0]}>
-                        {/* White fur rim - sits on top of head */}
+                    {/* Belt */}
+                    <mesh position={[0, -0.08, 0]}>
+                        <cylinderGeometry args={[0.37, 0.37, 0.08, 16]} />
+                        <meshStandardMaterial color="#1a1a1a" />
+                    </mesh>
+                    {/* Belt buckle - on front facing +Z (which becomes +X after rotation) */}
+                    <mesh position={[0, -0.08, 0.38]}>
+                        <boxGeometry args={[0.1, 0.06, 0.02]} />
+                        <meshStandardMaterial color="#FFD700" metalness={0.9} roughness={0.2} />
+                    </mesh>
+
+                    {/* Head */}
+                    <group position={[0, 0.38, 0]}>
+                        {/* Face */}
                         <mesh>
-                            <cylinderGeometry args={[0.18, 0.22, 0.10, 16]} />
+                            <sphereGeometry args={[0.22, 20, 20]} />
+                            <meshStandardMaterial color="#FDBBB7" roughness={0.6} />
+                        </mesh>
+
+                        {/* Eyes - on front (+Z, becomes +X after rotation) */}
+                        <mesh position={[-0.07, 0.04, 0.18]}>
+                            <sphereGeometry args={[0.03, 10, 10]} />
+                            <meshStandardMaterial color="#1a1a1a" />
+                        </mesh>
+                        <mesh position={[0.07, 0.04, 0.18]}>
+                            <sphereGeometry args={[0.03, 10, 10]} />
+                            <meshStandardMaterial color="#1a1a1a" />
+                        </mesh>
+
+                        {/* Rosy cheeks */}
+                        <mesh position={[-0.12, -0.01, 0.15]}>
+                            <sphereGeometry args={[0.04, 10, 10]} />
+                            <meshStandardMaterial color="#FF6B6B" />
+                        </mesh>
+                        <mesh position={[0.12, -0.01, 0.15]}>
+                            <sphereGeometry args={[0.04, 10, 10]} />
+                            <meshStandardMaterial color="#FF6B6B" />
+                        </mesh>
+
+                        {/* Red nose */}
+                        <mesh position={[0, -0.01, 0.21]}>
+                            <sphereGeometry args={[0.04, 12, 12]} />
+                            <meshStandardMaterial color="#FF0000" />
+                        </mesh>
+
+                        {/* White beard */}
+                        <group position={[0, -0.12, 0.12]}>
+                            <mesh position={[0, -0.04, 0.04]}>
+                                <sphereGeometry args={[0.15, 14, 14]} />
+                                <meshStandardMaterial color="#FFFFFF" />
+                            </mesh>
+                            <mesh position={[-0.1, 0, 0.02]}>
+                                <sphereGeometry args={[0.1, 12, 12]} />
+                                <meshStandardMaterial color="#FFFFFF" />
+                            </mesh>
+                            <mesh position={[0.1, 0, 0.02]}>
+                                <sphereGeometry args={[0.1, 12, 12]} />
+                                <meshStandardMaterial color="#FFFFFF" />
+                            </mesh>
+                            <mesh position={[0, -0.15, 0]}>
+                                <sphereGeometry args={[0.12, 12, 12]} />
+                                <meshStandardMaterial color="#FFFFFF" />
+                            </mesh>
+                            <mesh position={[0, -0.24, -0.02]}>
+                                <sphereGeometry args={[0.08, 10, 10]} />
+                                <meshStandardMaterial color="#FFFFFF" />
+                            </mesh>
+                        </group>
+
+                        {/* Mustache */}
+                        <mesh position={[-0.06, -0.05, 0.19]} rotation={[0, 0, 0.3]}>
+                            <capsuleGeometry args={[0.025, 0.06, 6, 8]} />
                             <meshStandardMaterial color="#FFFFFF" />
                         </mesh>
-                        {/* Red cone - base sits on top of rim (cone origin is at center, so adjust y) */}
-                        <mesh position={[0, 0.25, 0.01]} rotation={[0, 0, 0]}>
-                            <coneGeometry args={[0.18, 0.38, 16]} />
-                            <meshStandardMaterial color="#DC143C" />
-                        </mesh>
-                        {/* Pom-pom at the drooping tip */}
-                        <mesh position={[-0.06, 0.48, 0.02]}>
-                            <sphereGeometry args={[0.06, 12, 12]} />
+                        <mesh position={[0.06, -0.05, 0.19]} rotation={[0, 0, -0.3]}>
+                            <capsuleGeometry args={[0.025, 0.06, 6, 8]} />
                             <meshStandardMaterial color="#FFFFFF" />
                         </mesh>
+
+                        {/* Santa Hat - positioned at top of head */}
+                        <group position={[0, 0.15, 0]}>
+                            {/* White fur rim - sits on top of head */}
+                            <mesh>
+                                <cylinderGeometry args={[0.18, 0.22, 0.10, 16]} />
+                                <meshStandardMaterial color="#FFFFFF" />
+                            </mesh>
+                            {/* Red cone - base sits on top of rim (cone origin is at center, so adjust y) */}
+                            <mesh position={[0, 0.25, 0.01]} rotation={[0, 0, 0]}>
+                                <coneGeometry args={[0.18, 0.38, 16]} />
+                                <meshStandardMaterial color="#DC143C" />
+                            </mesh>
+                            {/* Pom-pom at the drooping tip */}
+                            <mesh position={[-0.06, 0.48, 0.02]}>
+                                <sphereGeometry args={[0.06, 12, 12]} />
+                                <meshStandardMaterial color="#FFFFFF" />
+                            </mesh>
+                        </group>
                     </group>
+
+                    {/* Arms holding reins */}
+                    <mesh position={[0.28, -0.1, 0.25]} rotation={[125 * (Math.PI / 180), 0.2, 0.3]}>
+                        <capsuleGeometry args={[0.07, 0.28, 6, 8]} />
+                        <meshStandardMaterial color="#DC143C" />
+                        <mesh position={[0, 0.15, 0]}>
+                            <sphereGeometry args={[0.07, 10, 10]} />
+                            <meshStandardMaterial color="#FFFFFF" />
+                        </mesh>
+                    </mesh>
+                    <mesh position={[-0.28, -0.1, 0.25]} rotation={[125 * (Math.PI / 180), -0.2, -0.3]}>
+                        <capsuleGeometry args={[0.07, 0.28, 6, 8]} />
+                        <meshStandardMaterial color="#DC143C" />
+                        <mesh position={[0, 0.15, 0]}>
+                            <sphereGeometry args={[0.07, 10, 10]} />
+                            <meshStandardMaterial color="#FFFFFF" />
+                        </mesh>
+                    </mesh>
                 </group>
 
-                {/* Arms holding reins */}
-                <mesh position={[0.28, -0.1, 0.25]} rotation={[125 * (Math.PI / 180), 0.2, 0.3]}>
-                    <capsuleGeometry args={[0.07, 0.28, 6, 8]} />
-                    <meshStandardMaterial color="#DC143C" />
-                    <mesh position={[0, 0.15, 0]}>
-                        <sphereGeometry args={[0.07, 10, 10]} />
-                        <meshStandardMaterial color="#FFFFFF" />
-                    </mesh>
+                {/* Gift sack - behind the sleigh */}
+                <mesh position={[-1.0, 0.35, 0]} rotation={[0, 0.1, 0.2]}>
+                    <sphereGeometry args={[0.35, 12, 12]} />
+                    <meshStandardMaterial color="#8B4513" />
                 </mesh>
-                <mesh position={[-0.28, -0.1, 0.25]} rotation={[125 * (Math.PI / 180), -0.2, -0.3]}>
-                    <capsuleGeometry args={[0.07, 0.28, 6, 8]} />
-                    <meshStandardMaterial color="#DC143C" />
-                    <mesh position={[0, 0.15, 0]}>
-                        <sphereGeometry args={[0.07, 10, 10]} />
-                        <meshStandardMaterial color="#FFFFFF" />
-                    </mesh>
+                <mesh position={[-0.95, 0.7, 0]}>
+                    <cylinderGeometry args={[0.12, 0.18, 0.14, 8]} />
+                    <meshStandardMaterial color="#8B4513" />
+                </mesh>
+
+                {/* ========== REINDEER - 4 in formation ========== */}
+                {/* Front row (leaders) */}
+                <Reindeer position={[2.8, 0, 0.4]} offset={0} />
+                <Reindeer position={[2.8, 0, -0.4]} offset={1.2} />
+                {/* Back row */}
+                <Reindeer position={[1.8, 0, 0.55]} offset={0.6} />
+                <Reindeer position={[1.8, 0, -0.55]} offset={1.8} />
+
+                {/* ========== REINS - connecting all reindeer ========== */}
+                {/* Main reins from sleigh to back row */}
+                <mesh position={[0.9, 0.15, 0.35]} rotation={[0, 0.12, 0]}>
+                    <boxGeometry args={[1.4, 0.018, 0.018]} />
+                    <meshStandardMaterial color="#8B4513" />
+                </mesh>
+                <mesh position={[0.9, 0.15, -0.35]} rotation={[0, -0.12, 0]}>
+                    <boxGeometry args={[1.4, 0.018, 0.018]} />
+                    <meshStandardMaterial color="#8B4513" />
+                </mesh>
+
+                {/* Reins from back row to front row leaders */}
+                <mesh position={[2.3, 0.1, 0.47]} rotation={[0, 0.08, 0]}>
+                    <boxGeometry args={[1.1, 0.018, 0.018]} />
+                    <meshStandardMaterial color="#8B4513" />
+                </mesh>
+                <mesh position={[2.3, 0.1, -0.47]} rotation={[0, -0.08, 0]}>
+                    <boxGeometry args={[1.1, 0.018, 0.018]} />
+                    <meshStandardMaterial color="#8B4513" />
+                </mesh>
+
+                {/* Cross-connecting reins between pairs */}
+                <mesh position={[1.8, 0.08, 0]}>
+                    <boxGeometry args={[0.018, 0.018, 1.0]} />
+                    <meshStandardMaterial color="#8B4513" />
+                </mesh>
+                <mesh position={[2.8, 0.06, 0]}>
+                    <boxGeometry args={[0.018, 0.018, 0.7]} />
+                    <meshStandardMaterial color="#8B4513" />
                 </mesh>
             </group>
-
-            {/* Gift sack - behind the sleigh */}
-            <mesh position={[-1.0, 0.35, 0]} rotation={[0, 0.1, 0.2]}>
-                <sphereGeometry args={[0.35, 12, 12]} />
-                <meshStandardMaterial color="#8B4513" />
-            </mesh>
-            <mesh position={[-0.95, 0.7, 0]}>
-                <cylinderGeometry args={[0.12, 0.18, 0.14, 8]} />
-                <meshStandardMaterial color="#8B4513" />
-            </mesh>
-
-            {/* ========== REINDEER - 4 in formation ========== */}
-            {/* Front row (leaders) */}
-            <Reindeer position={[2.8, 0, 0.4]} offset={0} />
-            <Reindeer position={[2.8, 0, -0.4]} offset={1.2} />
-            {/* Back row */}
-            <Reindeer position={[1.8, 0, 0.55]} offset={0.6} />
-            <Reindeer position={[1.8, 0, -0.55]} offset={1.8} />
-
-            {/* ========== REINS - connecting all reindeer ========== */}
-            {/* Main reins from sleigh to back row */}
-            <mesh position={[0.9, 0.15, 0.35]} rotation={[0, 0.12, 0]}>
-                <boxGeometry args={[1.4, 0.018, 0.018]} />
-                <meshStandardMaterial color="#8B4513" />
-            </mesh>
-            <mesh position={[0.9, 0.15, -0.35]} rotation={[0, -0.12, 0]}>
-                <boxGeometry args={[1.4, 0.018, 0.018]} />
-                <meshStandardMaterial color="#8B4513" />
-            </mesh>
-
-            {/* Reins from back row to front row leaders */}
-            <mesh position={[2.3, 0.1, 0.47]} rotation={[0, 0.08, 0]}>
-                <boxGeometry args={[1.1, 0.018, 0.018]} />
-                <meshStandardMaterial color="#8B4513" />
-            </mesh>
-            <mesh position={[2.3, 0.1, -0.47]} rotation={[0, -0.08, 0]}>
-                <boxGeometry args={[1.1, 0.018, 0.018]} />
-                <meshStandardMaterial color="#8B4513" />
-            </mesh>
-
-            {/* Cross-connecting reins between pairs */}
-            <mesh position={[1.8, 0.08, 0]}>
-                <boxGeometry args={[0.018, 0.018, 1.0]} />
-                <meshStandardMaterial color="#8B4513" />
-            </mesh>
-            <mesh position={[2.8, 0.06, 0]}>
-                <boxGeometry args={[0.018, 0.018, 0.7]} />
-                <meshStandardMaterial color="#8B4513" />
-            </mesh>
         </group>
     );
-};
+}
 
 export default SantaSleigh;
