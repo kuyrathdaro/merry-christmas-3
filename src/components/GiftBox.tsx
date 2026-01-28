@@ -1,6 +1,13 @@
 import { useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
+import { TeddyBear } from './toys/TeddyBear'
+import { Robot } from './toys/Robot'
+import { Unicorn } from './toys/Unicorn'
+import { Tiara } from './toys/Tiara'
+import { Lollipop } from './toys/Lollipop'
+
+export type GiftType = 'teddy' | 'robot' | 'unicorn' | 'tiara' | 'lollipop';
 
 interface GiftBoxProps {
     position: [number, number, number]
@@ -9,6 +16,7 @@ interface GiftBoxProps {
     isOpen?: boolean
     onClick?: () => void
     scale?: number
+    giftType?: GiftType
 }
 
 /* ===== Proportions tuned to reference ===== */
@@ -29,10 +37,12 @@ const GiftBox = ({
     ribbonColor,
     isOpen = false,
     onClick,
-    scale = 1
+    scale = 1,
+    giftType
 }: GiftBoxProps) => {
 
     const lidRef = useRef<THREE.Group>(null)
+    const toyRef = useRef<THREE.Group>(null)
 
     useFrame(() => {
         if (lidRef.current) {
@@ -42,11 +52,44 @@ const GiftBox = ({
                 0.12
             )
         }
+
+        // Toy animation
+        if (toyRef.current) {
+            // Pop up
+            const targetY = isOpen ? 1.0 : -0.2
+            toyRef.current.position.y = THREE.MathUtils.lerp(
+                toyRef.current.position.y,
+                targetY,
+                0.08
+            )
+
+            // Scale up
+            const targetScale = isOpen ? 1 : 0.1
+            const currentScale = toyRef.current.scale.x
+            const nextScale = THREE.MathUtils.lerp(currentScale, targetScale, 0.08)
+            toyRef.current.scale.setScalar(nextScale)
+
+            // Spin when open
+            if (isOpen && giftType) {
+                toyRef.current.rotation.y += 0.02
+            }
+        }
     })
 
     // Materials
     const boxMaterial = new THREE.MeshStandardMaterial({ color })
     const ribbonMaterial = new THREE.MeshStandardMaterial({ color: ribbonColor })
+
+    const renderToy = () => {
+        switch (giftType) {
+            case 'teddy': return <TeddyBear />
+            case 'robot': return <Robot />
+            case 'unicorn': return <Unicorn />
+            case 'tiara': return <Tiara />
+            case 'lollipop': return <Lollipop />
+            default: return null
+        }
+    }
 
     return (
         <group
@@ -57,6 +100,10 @@ const GiftBox = ({
                 onClick?.()
             }}
         >
+            {/* ================= TOY ================= */}
+            <group ref={toyRef} scale={0.1} position={[0, -0.2, 0]}>
+                {renderToy()}
+            </group>
 
             {/* ================= BOX ================= */}
             <mesh position={[0, WALL / 2, 0]} material={boxMaterial}>
