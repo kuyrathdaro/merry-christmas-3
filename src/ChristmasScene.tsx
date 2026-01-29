@@ -1,17 +1,23 @@
 import { OrbitControls, Stars, Html } from '@react-three/drei'
 import { useState } from 'react'
+import * as THREE from 'three'
 import Santa from './components/Santa'
 import BackgroundForest from './components/BackgroundForest'
 import ChristmasTree from './components/ChristmasTree'
 import GiftBox, { type GiftType } from './components/GiftBox'
 import SnowScene from './components/SnowScene'
 
+// Gifts
+import { DiamondRing } from './components/gifts/DiamondRing'
+import { Handbag } from './components/gifts/Handbag'
+import { Perfume } from './components/gifts/Perfume'
+import { HeartNecklace } from './components/gifts/HeartNecklace'
+
 const GIFTS: { type: GiftType, label: string, color: string }[] = [
-    { type: 'teddy', label: '🧸 Cuddly Teddy Bear', color: '#8B4513' },
-    { type: 'unicorn', label: '🦄 Magical Unicorn', color: '#FF69B4' },
-    { type: 'robot', label: '🤖 Retro Robot', color: '#A9A9A9' },
-    { type: 'tiara', label: '👑 Princess Tiara', color: '#FFD700' },
-    { type: 'lollipop', label: '🍭 Giant Lollipop', color: '#FF4500' },
+    { type: 'ring', label: '💍 Diamond Ring', color: '#b9f2ff' },
+    { type: 'handbag', label: '👜 Designer Bag', color: '#800020' },
+    { type: 'perfume', label: '✨ Eau de Parfum', color: '#ffccdd' },
+    { type: 'necklace', label: '💖 Heart Necklace', color: '#ff4d4d' },
 ]
 
 const ChristmasScene = () => {
@@ -29,6 +35,32 @@ const ChristmasScene = () => {
             const randomGift = GIFTS[Math.floor(Math.random() * GIFTS.length)]
             setWonPrize(randomGift)
         }
+    }
+
+    const renderWonPrize = () => {
+        if (!wonPrize) return null
+
+        let Component = null
+        switch (wonPrize.type) {
+            case 'ring': Component = DiamondRing; break;
+            case 'handbag': Component = Handbag; break;
+            case 'perfume': Component = Perfume; break;
+            case 'necklace': Component = HeartNecklace; break;
+        }
+
+        if (!Component) return null
+
+        return (
+            <group position={[0, 1.2, 3]}>
+                {/* Spotlight to highlight the prize */}
+                <pointLight intensity={2} distance={5} color="white" />
+
+                {/* Floating Animation Wrapper */}
+                <group scale={1.5} rotation={[0, 0, 0]}>
+                    <Component />
+                </group>
+            </group>
+        )
     }
 
     return (
@@ -64,33 +96,47 @@ const ChristmasScene = () => {
             <ChristmasTree />
             <Santa />
 
-            {/* Popup UI - Centered */}
+            {/* ============ BIG DIALOG / PRIZE PRESENTATION ============ */}
             {wonPrize && (
-                <Html position={[0, 1, 3]} center style={{ pointerEvents: 'none' }}>
-                    <div style={{
-                        background: 'rgba(255, 255, 255, 0.95)',
-                        padding: '20px',
-                        borderRadius: '16px',
-                        textAlign: 'center',
-                        boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
-                        border: `4px solid ${wonPrize.color}`,
-                        minWidth: '200px',
-                        transform: 'translateY(-50px)',
-                        animation: 'popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
-                    }}>
-                        <h2 style={{ margin: '0 0 10px 0', fontSize: '1.5rem', color: '#1a1a1a' }}>You found a...</h2>
-                        <div style={{ fontSize: '1.8rem', fontWeight: 'bold', color: wonPrize.color }}>
-                            {wonPrize.label}
+                <>
+                    {/* Dark Overlay behind prize to focus attention */}
+                    <mesh position={[0, 1, 2.5]} >
+                        <planeGeometry args={[10, 10]} />
+                        <meshBasicMaterial color="black" transparent opacity={0.6} />
+                    </mesh>
+
+                    {/* The 3D Prize Model */}
+                    {renderWonPrize()}
+
+                    {/* HTML Label */}
+                    <Html position={[0, -0.5, 3]} center style={{ pointerEvents: 'none', zIndex: 100 }}>
+                        <div style={{
+                            background: 'rgba(255, 255, 255, 0.95)',
+                            padding: '24px 40px',
+                            borderRadius: '20px',
+                            textAlign: 'center',
+                            boxShadow: '0 10px 40px rgba(0,0,0,0.5)',
+                            border: `4px solid ${wonPrize.color}`,
+                            minWidth: '250px',
+                            animation: 'popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
+                        }}>
+                            <h2 style={{ margin: '0 0 10px 0', fontSize: '1.2rem', color: '#666', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                                A Special Gift For You
+                            </h2>
+                            <div style={{ fontSize: '2.5rem', fontWeight: 'bold', color: wonPrize.color, marginBottom: '10px' }}>
+                                {wonPrize.label}
+                            </div>
                         </div>
-                    </div>
-                    <style>{`
-                        @keyframes popIn {
-                            from { opacity: 0; transform: translateY(20px) scale(0.8); }
-                            to { opacity: 1; transform: translateY(-50px) scale(1); }
-                        }
-                    `}</style>
-                </Html>
+                        <style>{`
+                            @keyframes popIn {
+                                from { opacity: 0; transform: translateY(20px) scale(0.9); }
+                                to { opacity: 1; transform: translateY(0) scale(1); }
+                            }
+                        `}</style>
+                    </Html>
+                </>
             )}
+
 
             {/* Gifts - positioned just outside tree base (tree radius ~2.2 units) */}
             <GiftBox
@@ -100,7 +146,6 @@ const ChristmasScene = () => {
                 onClick={() => handleBoxClick('main')}
                 isOpen={openGiftId === 'main'}
                 scale={1.2}
-                giftType={openGiftId === 'main' ? wonPrize?.type : undefined}
             />
 
             <GiftBox
@@ -109,7 +154,6 @@ const ChristmasScene = () => {
                 ribbonColor="#93c5fd"
                 onClick={() => handleBoxClick('box2')}
                 isOpen={openGiftId === 'box2'}
-                giftType={openGiftId === 'box2' ? wonPrize?.type : undefined}
             />
             <GiftBox
                 position={[2.5, -2, 1.8]}
@@ -117,7 +161,6 @@ const ChristmasScene = () => {
                 ribbonColor="#6ee7b7"
                 onClick={() => handleBoxClick('box3')}
                 isOpen={openGiftId === 'box3'}
-                giftType={openGiftId === 'box3' ? wonPrize?.type : undefined}
             />
             <GiftBox
                 position={[-2.3, -2, -2.0]}
@@ -125,7 +168,6 @@ const ChristmasScene = () => {
                 ribbonColor="#c4b5fd"
                 onClick={() => handleBoxClick('box4')}
                 isOpen={openGiftId === 'box4'}
-                giftType={openGiftId === 'box4' ? wonPrize?.type : undefined}
             />
             <GiftBox
                 position={[2.3, -2, -2.0]}
@@ -133,7 +175,6 @@ const ChristmasScene = () => {
                 ribbonColor="#fde047"
                 onClick={() => handleBoxClick('box5')}
                 isOpen={openGiftId === 'box5'}
-                giftType={openGiftId === 'box5' ? wonPrize?.type : undefined}
             />
 
             {/* Controls */}
