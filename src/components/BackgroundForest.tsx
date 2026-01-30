@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import BackgroundTree from './BackgroundTree';
+import { Instances, Instance } from '@react-three/drei';
 
 const BackgroundForest = () => {
     const pseudo = (n: number) => Math.abs(Math.sin(n) * 10000) % 1;
@@ -18,9 +18,32 @@ const BackgroundForest = () => {
 
     return (
         <group>
-            {trees.map((t, i) => (
-                <BackgroundTree key={i} position={t.pos} scale={t.scale} />
-            ))}
+            {/* Trunk Instances */}
+            <Instances range={30}>
+                <cylinderGeometry args={[0.4, 0.6, 1.5, 6]} />
+                <meshStandardMaterial color="#2e1005" flatShading />
+                {trees.map((t, i) => (
+                    <Instance key={`trunk-${i}`} position={[t.pos[0], t.pos[1] + 0.5 * t.scale, t.pos[2]]} scale={t.scale} />
+                ))}
+            </Instances>
+
+            {/* Bottom Cone Instances */}
+            <Instances range={30}>
+                <coneGeometry args={[2.2, 3.3, 6]} />
+                <meshStandardMaterial color="#0f4c25" flatShading />
+                {trees.map((t, i) => (
+                    <Instance key={`cone1-${i}`} position={[t.pos[0], t.pos[1] + 1.5 * t.scale, t.pos[2]]} scale={t.scale} />
+                ))}
+            </Instances>
+
+            {/* Top Cone Instances */}
+            <Instances range={30}>
+                <coneGeometry args={[1.5, 2.5, 6]} />
+                <meshStandardMaterial color="#14532d" flatShading />
+                {trees.map((t, i) => (
+                    <Instance key={`cone2-${i}`} position={[t.pos[0], t.pos[1] + 3.5 * t.scale, t.pos[2]]} scale={t.scale} />
+                ))}
+            </Instances>
         </group>
     );
 };

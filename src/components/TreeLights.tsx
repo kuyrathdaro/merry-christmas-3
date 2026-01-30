@@ -1,107 +1,148 @@
 import { useMemo } from 'react';
-import * as THREE from 'three';
-import BlinkingLight from './BlinkingLight';
+import { Instances, Instance } from '@react-three/drei';
 
 const TreeLights = () => {
-    const pseudo = (n: number) => Math.abs(Math.sin(n) * 10000) % 1;
-    const lights = useMemo(() => {
-        const items = [] as Array<{ pos: [number, number, number]; color: string; angle: number }>;
-        const colors = ['#ef4444', '#fbbf24', '#3b82f6'];
-        for (let i = 0; i < 40; i++) {
-            const h = pseudo(i + 7) * 3 + 1.5;
-            const progress = (h - 1.5) / 3.5;
-            const r = (1 - progress) * 2.0;
-            const angle = pseudo(i + 17) * Math.PI * 2;
+    // Function to get tree radius at a given height (same as before)
+    const getTreeRadius = (height: number): number => {
+        const cones = [
+            { centerY: 1.5, scale: 2.2, height: 2.2 * 1.5 },
+            { centerY: 2.5, scale: 1.8, height: 1.8 * 1.5 },
+            { centerY: 3.5, scale: 1.4, height: 1.4 * 1.5 },
+            { centerY: 4.3, scale: 1.0, height: 1.0 * 1.5 },
+        ];
+        let maxRadius = 0;
+        for (const cone of cones) {
+            const baseY = cone.centerY - cone.height / 2;
+            const topY = cone.centerY + cone.height / 2;
+            if (height >= baseY && height <= topY) {
+                const t = (height - baseY) / cone.height;
+                const radius = cone.scale * (1 - t);
+                maxRadius = Math.max(maxRadius, radius);
+            }
+        }
+        return maxRadius > 0 ? maxRadius : 0.5;
+    };
+
+    // ================= BAUBLES (Ornaments) =================
+    const baubles = useMemo(() => {
+        const items = [];
+        const colors = ['#D4AF37', '#C0C0C0', '#d32f2f', '#1976d2', '#388e3c']; // Gold, Silver, Red, Blue, Green
+        const count = 45; // Number of baubles
+
+        for (let i = 0; i < count; i++) {
+            // Random height between bottom and near top
+            const h = 0.6 + Math.random() * 3.8;
+            const radius = getTreeRadius(h);
+            const r = radius * 0.9; // Slightly EMBEDDED in the leaves looks more natural than floating outside
+            const angle = Math.random() * Math.PI * 2;
+
             const x = Math.cos(angle) * r;
             const z = Math.sin(angle) * r;
-            const color = colors[Math.floor(pseudo(i + 23) * colors.length)];
-            items.push({ pos: [x, h, z], color, angle });
+
+            items.push({
+                pos: [x, h, z] as [number, number, number],
+                color: colors[Math.floor(Math.random() * colors.length)],
+                scale: 0.8 + Math.random() * 0.4
+            });
         }
         return items;
     }, []);
 
-    // sort lights by angle so they map consistently to cable rings
-    const ordered = useMemo(() => [...lights].sort((a, b) => a.angle - b.angle), [lights]);
+    // ================= FAIRY LIGHTS =================
+    const fairyLights = useMemo(() => {
+        const items = [];
+        const colors = ['#ffeb3b', '#ff9800', '#ff5722', '#00bcd4', '#e91e63']; // Warm & Colorful
 
-    // define cable rings (heights and radii). Higher rings are smaller radius.
-    const rings = useMemo(() => {
-        const heights = [1.8, 2.6, 3.4, 4.2];
-        const radii = [2.0, 1.7, 1.3, 0.9];
-        return heights.map((h, i) => ({ height: h, radius: radii[i] }));
-    }, []);
+        // Spiral pattern for lights looks best
+        const spirals = 8;
+        const lightsPerSpiral = 15;
 
-    // tube geometries for each ring with slight sag for realism
-    const ringGeometries = useMemo(() => {
-        return rings.map((r, ri) => {
-            const segs = 256;
-            const pts: THREE.Vector3[] = [];
-            // sag amplitude scales with radius
-            const sagAmp = 0.06 * (r.radius / 2);
-            for (let i = 0; i <= segs; i++) {
-                const a = (i / segs) * Math.PI * 2;
-                // gentle sag using absolute sin to create symmetric droops
-                const sag = Math.abs(Math.sin(a)) * sagAmp;
-                const y = r.height - sag;
-                pts.push(new THREE.Vector3(Math.cos(a) * r.radius, y, Math.sin(a) * r.radius));
+        for (let s = 0; s < spirals; s++) {
+            const yStart = 0.5;
+            const yEnd = 4.5;
+            const angleOffset = (s / spirals) * Math.PI * 2;
+
+            for (let i = 0; i < lightsPerSpiral; i++) {
+                const t = i / (lightsPerSpiral - 1);
+                const h = yStart + t * (yEnd - yStart);
+
+                // Add some randomness to height for natural look
+                const hFinal = h + (Math.random() - 0.5) * 0.1;
+
+                const radius = getTreeRadius(hFinal);
+                const r = radius * 1.02; // Just on surface
+
+                // Twist logic
+                const angle = angleOffset + t * Math.PI * 4; // 2 full turns
+
+                const x = Math.cos(angle) * r;
+                const z = Math.sin(angle) * r;
+
+                items.push({
+                    pos: [x, hFinal, z] as [number, number, number],
+                    color: colors[(s + i) % colors.length],
+                    blinkOffset: Math.random() * 10
+                });
             }
-            const curve = new THREE.CatmullRomCurve3(pts, true);
-            const geo = new THREE.TubeGeometry(curve, pts.length * 2, 0.02, 10, true);
-            return { geo, curve };
-        });
-    }, [rings]);
+        }
+        return items;
+    }, []);
 
     return (
         <group>
-            {/* cable rings */}
-            {ringGeometries.map((rg, i) => (
-                <mesh key={i} geometry={rg.geo} castShadow>
-                    <meshStandardMaterial color="#0d3b26" metalness={0.05} roughness={0.75} clearcoat={0.1} />
-                </mesh>
-            ))}
+            {/* BAUBLE SPHERES */}
+            <Instances range={100}>
+                <sphereGeometry args={[0.12, 16, 16]} />
+                <meshStandardMaterial roughness={0.15} metalness={0.9} envMapIntensity={1.5} />
+                {baubles.map((b, i) => (
+                    <Instance
+                        key={`bauble-s-${i}`}
+                        position={[b.pos[0], b.pos[1] - 0.1 * b.scale, b.pos[2]]}
+                        scale={b.scale}
+                        color={b.color}
+                    />
+                ))}
+            </Instances>
 
-            {/* bulbs hang from nearest ring based on their height; connector rendered in world-space */}
-            {ordered.map((l, i) => {
-                const angle = Math.atan2(l.pos[2], l.pos[0]);
-                // pick ring index closest to bulb's y
-                let bestIdx = 0;
-                let bestDiff = Infinity;
-                for (let ri = 0; ri < rings.length; ri++) {
-                    const d = Math.abs(rings[ri].height - l.pos[1]);
-                    if (d < bestDiff) { bestDiff = d; bestIdx = ri; }
-                }
-                const ring = rings[bestIdx];
-                const attachPoint = new THREE.Vector3(Math.cos(angle) * ring.radius, ring.height, Math.sin(angle) * ring.radius);
-                const bulbPos = new THREE.Vector3(l.pos[0], l.pos[1], l.pos[2]);
-                const dir = new THREE.Vector3().subVectors(bulbPos, attachPoint);
-                const len = dir.length();
-                const mid = attachPoint.clone().add(dir.clone().multiplyScalar(0.5));
-                const quat = new THREE.Quaternion();
-                if (len > 0.0001) quat.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir.clone().normalize());
+            {/* BAUBLE CAPS */}
+            <Instances range={100}>
+                <cylinderGeometry args={[0.03, 0.03, 0.05, 12]} />
+                <meshStandardMaterial color="#C0C0C0" metalness={1.0} roughness={0.3} />
+                {baubles.map((b, i) => (
+                    <Instance
+                        key={`bauble-c-${i}`}
+                        position={[b.pos[0], b.pos[1] + 0.02 * b.scale, b.pos[2]]}
+                        scale={b.scale}
+                    />
+                ))}
+            </Instances>
 
-                return (
-                    <group key={i}>
-                        {/* small hook at attach point */}
-                        <mesh position={[attachPoint.x, attachPoint.y, attachPoint.z]}>
-                            <sphereGeometry args={[0.03, 8, 8]} />
-                            <meshStandardMaterial color="#2b2b2b" metalness={0.8} roughness={0.25} />
-                        </mesh>
+            {/* BAUBLE RINGS */}
+            <Instances range={100}>
+                <torusGeometry args={[0.015, 0.005, 8, 16]} />
+                <meshStandardMaterial color="#C0C0C0" metalness={1.0} roughness={0.3} />
+                {baubles.map((b, i) => (
+                    <Instance
+                        key={`bauble-r-${i}`}
+                        position={[b.pos[0], b.pos[1] + 0.045 * b.scale, b.pos[2]]}
+                        rotation={[0, 0, Math.PI / 2]}
+                        scale={b.scale}
+                    />
+                ))}
+            </Instances>
 
-                        {/* connector */}
-                        {len > 0.0001 && (
-                            <mesh position={[mid.x, mid.y, mid.z]} quaternion={quat}>
-                                <cylinderGeometry args={[0.0125, 0.0125, len, 6]} />
-                                <meshStandardMaterial color="#072612" metalness={0.1} roughness={0.6} />
-                            </mesh>
-                        )}
-
-                        {/* bulb */}
-                        <BlinkingLight
-                            position={[bulbPos.x, bulbPos.y, bulbPos.z]}
-                            color={l.color}
-                        />
-                    </group>
-                );
-            })}
+            {/* FAIRY LIGHTS */}
+            <Instances range={200}>
+                <sphereGeometry args={[0.03, 8, 8]} />
+                <meshStandardMaterial toneMapped={false} />
+                {fairyLights.map((l, i) => (
+                    <Instance
+                        key={`light-${i}`}
+                        position={l.pos}
+                        color={l.color}
+                    />
+                ))}
+            </Instances>
         </group>
     );
 };

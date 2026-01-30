@@ -1,33 +1,43 @@
-import './index.css';
-import ChristmasScene from './ChristmasScene';
+import './index.css'
+import { Canvas } from '@react-three/fiber'
+import ChristmasScene from './ChristmasScene'
+import { LoadingScreen } from './components/LoadingScreen'
+import type { JSX } from 'react'
 
-
-// Main App Component
-function App() {
-
+function App(): JSX.Element {
   return (
-    <div className="scene-container">
-      {/* 3D Scene Layer */}
-      <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 1 }}>
-        <ChristmasScene />
-      </div>
+    <>
+      {/* Fake loader */}
+      <LoadingScreen />
 
-      {/* Decorative Title Overlay */}
-      <h1 style={{
-        position: 'absolute',
-        top: '20px',
-        width: '100%',
-        textAlign: 'center',
-        fontFamily: 'var(--font-heading)',
-        fontSize: '3rem',
-        textShadow: '0 0 10px rgba(255,215,0,0.5)',
-        zIndex: 10,
-        pointerEvents: 'none' // Let clicks pass through to canvas
-      }}>
-        Merry Christmas
+      {/* 3D Scene */}
+      <Canvas
+        shadows
+        dpr={[1, 2]}
+        camera={{ position: [0, 5, 12], fov: 50 }}
+        style={{ position: 'fixed', inset: 0 }}
+      >
+        <ChristmasScene />
+      </Canvas>
+
+      {/* Title overlay */}
+      <h1
+        style={{
+          fontFamily: 'var(--font-heading)',
+          position: 'fixed',
+          top: 20,
+          width: '100%',
+          textAlign: 'center',
+          fontSize: '3rem',
+          color: '#fff',
+          zIndex: 10,
+          pointerEvents: 'none',
+        }}
+      >
+        Merry Christmas 🎄
       </h1>
-    </div>
-  );
+    </>
+  )
 }
 
-export default App;
+export default App

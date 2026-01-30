@@ -2,12 +2,20 @@ import { useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 
+// We keep the types here for consistency across the app, 
+// even though the box itself doesn't render the toy anymore.
+export type GiftType =
+    | 'teddy' | 'robot' | 'unicorn' | 'tiara' | 'lollipop'
+    | 'ring' | 'handbag' | 'perfume' | 'necklace';
+
 interface GiftBoxProps {
     position: [number, number, number]
     color: string
     ribbonColor: string
     isOpen?: boolean
     onClick?: () => void
+    scale?: number
+    giftType?: GiftType // Kept for API compatibility but not used for rendering internals
 }
 
 /* ===== Proportions tuned to reference ===== */
@@ -27,7 +35,8 @@ const GiftBox = ({
     color,
     ribbonColor,
     isOpen = false,
-    onClick
+    onClick,
+    scale = 1,
 }: GiftBoxProps) => {
 
     const lidRef = useRef<THREE.Group>(null)
@@ -49,12 +58,12 @@ const GiftBox = ({
     return (
         <group
             position={position}
+            scale={scale}
             onClick={(e) => {
                 e.stopPropagation()
                 onClick?.()
             }}
         >
-
             {/* ================= BOX ================= */}
             <mesh position={[0, WALL / 2, 0]} material={boxMaterial}>
                 <boxGeometry args={[SIZE, WALL, SIZE]} />
