@@ -1,75 +1,66 @@
-# React + TypeScript + Vite
+# 🎄 Merry Christmas 3D Scene
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A visually stunning, interactive 3D Christmas experience directly in your browser.
 
-Currently, two official plugins are available:
+## 🌟 Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+### 🎁 Interactive Luxury Gifts
+Experience high-fidelity 3D models of premium gifts:
+*   **Silver Necklace**: A delicate pear-cut solitaire diamond pendant on a fine silver chain.
+*   **Designer Handbag**: A classic cream leather shoulder bag with the signature green-red-green web stripe and gold hardware chains.
+*   **Diamond Ring**: An exquisite brilliant-cut diamond solitaire ring in a gold setting.
+*   **Perfume**: An elegant glass battle with realistic refraction.
 
-## React Compiler
+### ❄️ Immersive Atmosphere
+*   **Snowfall System**: Realistic particle-based snow.
+*   **Christmas Tree**: Fully decorated with instanced ornaments, fairy lights, and a glowing star.
+*   **Dynamic Lighting**: Emissive materials and carefully tuned lights for a cozy holiday feel.
+*   **Santa's Sleigh**: Animated Santa flying through the starry sky.
 
-The React Compiler is enabled on this template. See [this documentation](https://react.dev/learn/react-compiler) for more information.
+### 🎮 How to Play
+1.  **Explore**: Click and drag to rotate the camera around the scene.
+2.  **Open Gifts**: Click on the gift boxes under the tree to open them.
+3.  **Find the Prize**: One special box (the Red one!) contains a luxury prize that will float up for close inspection.
 
-Note: This will impact Vite dev & build performances.
+## 🛠️ Tech Stack
 
-## Expanding the ESLint configuration
+Built with modern web technologies for performance and visual fidelity:
+*   **React** (v18+)
+*   **TypeScript**
+*   **Vite** - Fast tooling and build system.
+*   **@react-three/fiber** - React renderer for Three.js.
+*   **@react-three/drei** - Useful helpers for R3F (OrbitControls, Stars, etc.).
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## 🚀 Getting Started
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+### Prerequisites
+*   Node.js (v18 or higher recommended)
+*   npm or yarn
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+### Installation
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+Clone the repository and install dependencies:
+
+```bash
+git clone <repository-url>
+cd merry-christmas-3
+npm install
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+### Running Locally
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+Start the development server:
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm run dev
 ```
+
+Open your browser to `http://localhost:5173` (or the URL shown in your terminal).
+
+## 🎨 Customizing
+
+*   **Colors/Materials**: tweak materials in `src/components/gifts/`
+*   **Scene Settings**: Adjust lights, stars, and fog in `src/ChristmasScene.tsx`
+
+---
+*Created with ❤️ for the Holidays*
