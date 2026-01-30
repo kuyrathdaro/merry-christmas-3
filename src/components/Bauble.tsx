@@ -17,7 +17,7 @@ const Bauble = ({ position, color, scale = 1 }: { position: [number, number, num
         <group position={position} scale={scale}>
             {/* The Ornament Sphere */}
             <mesh ref={meshRef} position={[0, -0.1, 0]}>
-                <sphereGeometry args={[0.12, 32, 32]} />
+                <sphereGeometry args={[0.12, 16, 16]} />
                 <meshStandardMaterial
                     color={color}
                     roughness={0.15}

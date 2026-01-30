@@ -1,6 +1,5 @@
 import { useMemo } from 'react';
-import Bauble from './Bauble';
-import FairyLight from './FairyLight';
+import { Instances, Instance } from '@react-three/drei';
 
 const TreeLights = () => {
     // Function to get tree radius at a given height (same as before)
@@ -91,12 +90,59 @@ const TreeLights = () => {
 
     return (
         <group>
-            {baubles.map((b, i) => (
-                <Bauble key={`bauble-${i}`} position={b.pos} color={b.color} scale={b.scale} />
-            ))}
-            {fairyLights.map((l, i) => (
-                <FairyLight key={`light-${i}`} position={l.pos} color={l.color} blinkOffset={l.blinkOffset} />
-            ))}
+            {/* BAUBLE SPHERES */}
+            <Instances range={100}>
+                <sphereGeometry args={[0.12, 16, 16]} />
+                <meshStandardMaterial roughness={0.15} metalness={0.9} envMapIntensity={1.5} />
+                {baubles.map((b, i) => (
+                    <Instance
+                        key={`bauble-s-${i}`}
+                        position={[b.pos[0], b.pos[1] - 0.1 * b.scale, b.pos[2]]}
+                        scale={b.scale}
+                        color={b.color}
+                    />
+                ))}
+            </Instances>
+
+            {/* BAUBLE CAPS */}
+            <Instances range={100}>
+                <cylinderGeometry args={[0.03, 0.03, 0.05, 12]} />
+                <meshStandardMaterial color="#C0C0C0" metalness={1.0} roughness={0.3} />
+                {baubles.map((b, i) => (
+                    <Instance
+                        key={`bauble-c-${i}`}
+                        position={[b.pos[0], b.pos[1] + 0.02 * b.scale, b.pos[2]]}
+                        scale={b.scale}
+                    />
+                ))}
+            </Instances>
+
+            {/* BAUBLE RINGS */}
+            <Instances range={100}>
+                <torusGeometry args={[0.015, 0.005, 8, 16]} />
+                <meshStandardMaterial color="#C0C0C0" metalness={1.0} roughness={0.3} />
+                {baubles.map((b, i) => (
+                    <Instance
+                        key={`bauble-r-${i}`}
+                        position={[b.pos[0], b.pos[1] + 0.045 * b.scale, b.pos[2]]}
+                        rotation={[0, 0, Math.PI / 2]}
+                        scale={b.scale}
+                    />
+                ))}
+            </Instances>
+
+            {/* FAIRY LIGHTS */}
+            <Instances range={200}>
+                <sphereGeometry args={[0.03, 8, 8]} />
+                <meshStandardMaterial toneMapped={false} />
+                {fairyLights.map((l, i) => (
+                    <Instance
+                        key={`light-${i}`}
+                        position={l.pos}
+                        color={l.color}
+                    />
+                ))}
+            </Instances>
         </group>
     );
 };

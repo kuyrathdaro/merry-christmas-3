@@ -1,6 +1,6 @@
-import { OrbitControls, Stars, Html } from '@react-three/drei'
+import { OrbitControls, Stars, Float, Environment } from '@react-three/drei'
 import { useState } from 'react'
-import * as THREE from 'three'
+
 import Santa from './components/Santa'
 import BackgroundForest from './components/BackgroundForest'
 import ChristmasTree from './components/ChristmasTree'
@@ -11,29 +11,33 @@ import SnowScene from './components/SnowScene'
 import { DiamondRing } from './components/gifts/DiamondRing'
 import { Handbag } from './components/gifts/Handbag'
 import { Perfume } from './components/gifts/Perfume'
-import { HeartNecklace } from './components/gifts/HeartNecklace'
+import { Necklace } from './components/gifts/Necklace'
 
-const GIFTS: { type: GiftType, label: string, color: string }[] = [
-    { type: 'ring', label: '💍 Diamond Ring', color: '#b9f2ff' },
-    { type: 'handbag', label: '👜 Designer Bag', color: '#800020' },
-    { type: 'perfume', label: '✨ Eau de Parfum', color: '#ffccdd' },
-    { type: 'necklace', label: '💖 Heart Necklace', color: '#ff4d4d' },
+const GIFTS: GiftType[] = [
+    'ring',
+    'handbag',
+    'perfume',
+    'necklace',
 ]
 
 const ChristmasScene = () => {
-    const [openGiftId, setOpenGiftId] = useState<string | null>(null)
-    const [wonPrize, setWonPrize] = useState<{ type: GiftType, label: string, color: string } | null>(null)
+    const [openedBoxIds, setOpenedBoxIds] = useState<string[]>([])
+    const [wonPrize, setWonPrize] = useState<GiftType | null>(null)
 
     const handleBoxClick = (id: string) => {
-        if (openGiftId === id) {
-            // Close
-            setOpenGiftId(null)
-            setWonPrize(null)
+        if (openedBoxIds.includes(id)) {
+            // Close box
+            setOpenedBoxIds(prev => prev.filter(boxId => boxId !== id))
+            if (id === 'main') setWonPrize(null)
         } else {
-            // Open new
-            setOpenGiftId(id)
-            const randomGift = GIFTS[Math.floor(Math.random() * GIFTS.length)]
-            setWonPrize(randomGift)
+            // Open box
+            setOpenedBoxIds(prev => [...prev, id])
+
+            // Only the 'main' (Red) box has the prize
+            if (id === 'main') {
+                const randomGift = GIFTS[Math.floor(Math.random() * GIFTS.length)]
+                setWonPrize(randomGift)
+            }
         }
     }
 
@@ -41,24 +45,26 @@ const ChristmasScene = () => {
         if (!wonPrize) return null
 
         let Component = null
-        switch (wonPrize.type) {
+        switch (wonPrize) {
             case 'ring': Component = DiamondRing; break;
             case 'handbag': Component = Handbag; break;
             case 'perfume': Component = Perfume; break;
-            case 'necklace': Component = HeartNecklace; break;
+            case 'necklace': Component = Necklace; break;
         }
 
         if (!Component) return null
 
         return (
-            <group position={[0, 1.2, 3]}>
+            <group position={[0, 1.5, 3]}>
                 {/* Spotlight to highlight the prize */}
                 <pointLight intensity={2} distance={5} color="white" />
 
                 {/* Floating Animation Wrapper */}
-                <group scale={1.5} rotation={[0, 0, 0]}>
-                    <Component />
-                </group>
+                <Float speed={2} rotationIntensity={1} floatIntensity={1}>
+                    <group scale={1.5} rotation={[0, 0, 0]}>
+                        <Component />
+                    </group>
+                </Float>
             </group>
         )
     }
@@ -75,14 +81,15 @@ const ChristmasScene = () => {
                 angle={0.5}
                 penumbra={1}
                 intensity={4}
-                castShadow
+            // castShadow - Disabled for performance
             />
             <pointLight position={[-10, 5, -10]} intensity={2} color="#60a5fa" />
             <directionalLight position={[0, 10, 5]} intensity={1.5} color="#ffd700" />
 
             {/* Environment */}
-            <Stars radius={100} depth={50} count={5000} factor={4} fade />
+            <Stars radius={100} depth={50} count={1500} factor={4} fade />
             <SnowScene />
+            <Environment preset="city" />
             <fog attach="fog" args={['#0f172a', 5, 30]} />
 
             {/* Ground */}
@@ -99,41 +106,8 @@ const ChristmasScene = () => {
             {/* ============ BIG DIALOG / PRIZE PRESENTATION ============ */}
             {wonPrize && (
                 <>
-                    {/* Dark Overlay behind prize to focus attention */}
-                    <mesh position={[0, 1, 2.5]} >
-                        <planeGeometry args={[10, 10]} />
-                        <meshBasicMaterial color="black" transparent opacity={0.6} />
-                    </mesh>
-
                     {/* The 3D Prize Model */}
                     {renderWonPrize()}
-
-                    {/* HTML Label */}
-                    <Html position={[0, -0.5, 3]} center style={{ pointerEvents: 'none', zIndex: 100 }}>
-                        <div style={{
-                            background: 'rgba(255, 255, 255, 0.95)',
-                            padding: '24px 40px',
-                            borderRadius: '20px',
-                            textAlign: 'center',
-                            boxShadow: '0 10px 40px rgba(0,0,0,0.5)',
-                            border: `4px solid ${wonPrize.color}`,
-                            minWidth: '250px',
-                            animation: 'popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
-                        }}>
-                            <h2 style={{ margin: '0 0 10px 0', fontSize: '1.2rem', color: '#666', textTransform: 'uppercase', letterSpacing: '1px' }}>
-                                A Special Gift For You
-                            </h2>
-                            <div style={{ fontSize: '2.5rem', fontWeight: 'bold', color: wonPrize.color, marginBottom: '10px' }}>
-                                {wonPrize.label}
-                            </div>
-                        </div>
-                        <style>{`
-                            @keyframes popIn {
-                                from { opacity: 0; transform: translateY(20px) scale(0.9); }
-                                to { opacity: 1; transform: translateY(0) scale(1); }
-                            }
-                        `}</style>
-                    </Html>
                 </>
             )}
 
@@ -144,7 +118,7 @@ const ChristmasScene = () => {
                 color="#dc2626"
                 ribbonColor="#fbbf24"
                 onClick={() => handleBoxClick('main')}
-                isOpen={openGiftId === 'main'}
+                isOpen={openedBoxIds.includes('main')}
                 scale={1.2}
             />
 
@@ -153,37 +127,38 @@ const ChristmasScene = () => {
                 color="#1e40af"
                 ribbonColor="#93c5fd"
                 onClick={() => handleBoxClick('box2')}
-                isOpen={openGiftId === 'box2'}
+                isOpen={openedBoxIds.includes('box2')}
             />
             <GiftBox
                 position={[2.5, -2, 1.8]}
                 color="#065f46"
                 ribbonColor="#6ee7b7"
                 onClick={() => handleBoxClick('box3')}
-                isOpen={openGiftId === 'box3'}
+                isOpen={openedBoxIds.includes('box3')}
             />
             <GiftBox
                 position={[-2.3, -2, -2.0]}
                 color="#7c3aed"
                 ribbonColor="#c4b5fd"
                 onClick={() => handleBoxClick('box4')}
-                isOpen={openGiftId === 'box4'}
+                isOpen={openedBoxIds.includes('box4')}
             />
             <GiftBox
                 position={[2.3, -2, -2.0]}
                 color="#ea580c"
                 ribbonColor="#fde047"
                 onClick={() => handleBoxClick('box5')}
-                isOpen={openGiftId === 'box5'}
+                isOpen={openedBoxIds.includes('box5')}
             />
 
             {/* Controls */}
             <OrbitControls
+                makeDefault
                 enableZoom={false}
                 enablePan={false}
                 minPolarAngle={Math.PI / 6}
                 maxPolarAngle={Math.PI / 2.2}
-                autoRotate={!openGiftId} // Stop rotation when gift is open for better view
+                autoRotate={!wonPrize} // Stop rotation when prize is displayed
                 autoRotateSpeed={0.8}
             />
         </>
